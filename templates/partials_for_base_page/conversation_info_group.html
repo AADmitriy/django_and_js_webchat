@@ -1,0 +1,72 @@
+{% load static %}
+<div class="conversation_info_topbar">
+    <button class="close_conversation_info">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+        </svg>
+    </button>
+    <div class="info_type">User Info</div>
+</div>
+<div class="group_data conversation_info_wrapper">
+    <div class="profile_info">
+        <div class="profile_photo">
+            <div class="profile_photo_thumb">C</div>
+            <!-- <img src="{% get_media_prefix %}DA_icon.png"> -->
+        </div>
+        <div class="profile_text_info">
+            <div class="profile_name">Cool User</div>
+            <div class="profile_meta">
+                <div class="members_counter_container"><span class="members_counter">176</span> members</div>
+            </div>
+        </div>
+        <div class="background_gradient"></div>
+    </div>
+    <div class="profile_additional_info">
+        <div class="group_members_list">
+            <div class="group_member_data">
+                <div class="member_avatar">
+                    <img src="{% get_media_prefix %}DA_icon.png">
+                </div>
+                <div class="member_text_info">
+                    <div class="info_name_title">
+                        <div class="member_name">
+                            Cool User
+                        </div>
+                    </div>
+                    <div class="status">
+                        <span class="online_member_status">online</span>
+                    </div>
+                </div>
+            </div>
+            {% include "partials_for_base_page/group_member_data.html" %}
+            {% include "partials_for_base_page/group_member_data.html" %}
+            {% include "partials_for_base_page/group_member_data.html" %}
+            {% include "partials_for_base_page/group_member_data.html" %}
+            {% include "partials_for_base_page/group_member_data.html" %}
+            {% include "partials_for_base_page/group_member_data.html" %}
+        </div>
+    </div>
+    <div class="group_options_wrapper">
+        <button class="toggle_group_menu">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
+            </svg>
+        </button>
+        <div class="group_menu_popup hidden">
+            <button class="add_user_to_group">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                    <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+                    <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+                </svg>
+                Add User
+            </button>
+            <button class="remove_user">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                    <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M11 12h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1m0-7a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+                    <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+                </svg>
+                Remove User
+            </button>
+        </div>
+    </div>
+</div>

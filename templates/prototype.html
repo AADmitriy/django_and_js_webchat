@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    prototype
+<script>
+const socket = new WebSocket(`ws://127.0.0.1:8000/ws/prototype`);
+
+socket.onopen = function (event) {
+    console.log('You are Connected to WebSocket Server');
+};
+
+socket.onmessage = function (event) {
+    const message = JSON.parse(event.data);
+    console.log('Received message:', message);
+};
+
+socket.onclose = function (event) {
+    console.log('Disconnected from WebSocket server');
+};
+
+function sendMessage(message) {
+    const message_data = {
+        'request_type': 'msg',
+        'message': `${message}`,
+        'room_uuid': "proto"
+    };
+    socket.send(JSON.stringify(message_data));
+};
+</script>
+</body>
+</html>

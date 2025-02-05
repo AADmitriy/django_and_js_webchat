@@ -1,0 +1,32 @@
+from django.http import HttpResponse, HttpResponseNotFound
+from core.settings import BASE_DIR
+from django.contrib.auth.decorators import login_required
+import os
+from .models import File
+
+# Create your views here.
+
+@login_required(login_url="accounts/login")
+def serve_file(request, file_uuid):
+    if not File.objects.filter(file_uuid=file_uuid).exists():
+        return HttpResponseNotFound()
+    
+    # Also check if user avatar is requested file 
+    # or room of message with this file is in user rooms
+    # if not return not found
+
+    user = request.user
+    file = File.objects.get(file_uuid=file_uuid)
+    # if file.file_uuid != user.avatar_img.file_uuid:
+    #     return HttpResponseNotFound()
+    
+    file_path = file.file.url
+
+    # profile_img = request.user.profile_img
+    # print(profile_img)
+    # if not profile_img:
+    #     return HttpResponseNotFound()
+    
+    path_to_image = os.path.normpath("".join((str(BASE_DIR), file_path)))
+    image_data = open(path_to_image, "rb").read()
+    return HttpResponse(image_data, content_type="image/png")

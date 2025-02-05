@@ -1,0 +1,49 @@
+{% load static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+    <title>Login Page</title>
+</head>
+<body>
+<div class="form_wrapper glass">
+    <div class="form_box">
+        <h2>Login</h2>
+        <form method="POST" action="" class="login_form">
+            {% csrf_token %}
+            <div class="input_box">
+                <input type="text" name="username" class="" required>
+                <label class="form-label">Username</label>
+            </div>
+            <div class="input_box">
+                <input type="password" name="password" id="password" required>
+                <label class="form-label">Password</label>
+                <span class="icon material-symbols-outlined" id="togglePassword">visibility</span>
+            </div>
+            <button type="submit" class="btn_primary">Log In</button>
+            <p class="login-signup">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+        </form>
+    </div>
+</div>
+
+<script>
+    togglePassword = document.querySelector('#togglePassword');
+    password = document.querySelector('#password');
+
+    togglePassword.addEventListener("click", function(event) {
+        event.preventDefault();
+        const type = password.getAttribute("type") === "password" ? "text" : "password";
+        password.setAttribute("type", type);
+    
+        if (this.textContent == "visibility_off") {
+            this.textContent = "visibility";
+        }
+        else {
+            this.textContent = "visibility_off";
+        }
+    });
+</script>
+</body>
+</html>
