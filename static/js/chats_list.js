@@ -71,6 +71,7 @@ var templates = (function() {
     }
 
     return {
+        unread_msgs_counter_html,
         chat_side_info: function(collocutor_data, room_uuid, 
                                  last_msg_data, user_id, unread_msgs_count) {
             const has_avatar_img = collocutor_data['avatar_img_uuid'] != ""
