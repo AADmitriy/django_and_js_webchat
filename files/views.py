@@ -3,6 +3,8 @@ from core.settings import BASE_DIR
 from django.contrib.auth.decorators import login_required
 import os
 from .models import File
+from django.http import JsonResponse
+import mimetypes
 
 # Create your views here.
 
@@ -28,5 +30,19 @@ def serve_file(request, file_uuid):
     #     return HttpResponseNotFound()
     
     path_to_image = os.path.normpath("".join((str(BASE_DIR), file_path)))
+    content_type, encoding = mimetypes.guess_type(path_to_image)
+
     image_data = open(path_to_image, "rb").read()
-    return HttpResponse(image_data, content_type="image/png")
+    return HttpResponse(image_data, content_type=content_type)
+
+@login_required
+def upload_file(request):
+    if request.method == 'POST':
+        print(request.POST)
+        print(request.FILES)
+        file = request.FILES.get("attached_file")
+        print(file)
+        file_instance = File.objects.create(file = file)
+        file_instance.save()
+        file_uuid = file_instance.file_uuid
+        return JsonResponse({'file_uuid': file_uuid})

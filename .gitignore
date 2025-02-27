@@ -2,7 +2,7 @@
 __pycache__/
 db.sqlite3
 
-
+media/files/*.pdf
 media/files/*.jpg
 media/files/*.JPG
 media/files/*.png

@@ -37,6 +37,7 @@ import {
     get_localized_date,
     get_hours_minutes,
     get_current_datetime,
+    get_current_hours_minutes,
 } from "./time_functions.js"
 
 import {
@@ -69,6 +70,41 @@ var templates = (function(){
         `
         return html
     }
+
+    function pending_message_info(message_data, with_pending_icon = true) {
+        const send_time = get_hours_minutes(message_data['created_at'])
+
+        const html = `<span class="message_info">
+            <span class="message_meta">
+                <span class="message_send_time">${send_time}</span>
+                <span class="message_read">
+                    ${with_pending_icon ?
+                    pending_icon_html() :
+                    recieved_icon_html() 
+                    }
+                </span>
+            </span>
+        </span>`
+        return html
+    }
+
+    function own_message_info_html(message_data, user_id) {
+        const readed = Object.keys(message_data['read_records']).length !== 0;
+
+        const html = `<span class="message_info">
+            ${reactions_container_html(message_data['reactions'], user_id)}
+            <span class="message_meta">
+                ${message_updated_status_and_send_time_html(message_data)}
+                <span class="message_read">
+                    ${readed ? 
+                    readed_icon_html() :
+                    recieved_icon_html()
+                    }
+                </span>
+            </span>
+        </span>`
+        return html
+    }
     
     function collocutor_message_info_html(message_data, user_id) {
         const html = `<span class="message_info">
@@ -76,8 +112,7 @@ var templates = (function(){
             <span class="message_meta">
                 ${message_updated_status_and_send_time_html(message_data)}
             </span>
-        </span>
-        `
+        </span>`
         return html
     }
     
@@ -119,6 +154,58 @@ var templates = (function(){
             Copy Text
         </button>
         `
+        return html
+    }
+    function file_content_html(file_data) {
+        const html = `
+        <div class="file_content">
+            <div class="file_icon" ${!file_data['loaded'] 
+                                     ? 'style="display:none"' 
+                                     : `file_uuid="${file_data['file_uuid']}"`}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                    <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293z"/>
+                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                </svg>
+            </div>
+            <div class="file_load_icon" ${file_data['loaded'] ? 'style="display:none"' : ''}></div>
+            <div class="file_info">
+                <div class="file_name">${file_data['name']}</div>
+                <div class="file_size">${get_size_of_file(file_data['size'])}</div>
+            </div>
+        </div>`
+        return html
+    }
+
+    function image_content_html(img_data) {
+        let img_src = img_data['src']
+        if (img_data['loaded']) {
+            img_src =  window.location.origin + "/files/" + img_data['img_uuid']
+        }
+        const html = `
+        <div class="img_content">
+            <img src="${img_src}">
+        </div>`
+        return html
+    }
+
+    function message_author_avatar_html(collocutor_data) {
+        const user_name = (collocutor_data) 
+                           ? collocutor_data['first_name'] 
+                           : 'deleted user'
+        const user_avatar_uuid = (collocutor_data) 
+                                  ? collocutor_data['avatar_img_uuid']
+                                  : ''
+        const user_has_avatar = (user_avatar_uuid && user_avatar_uuid != '')
+        const url_to_avatar_img = window.location.origin + "/files/" + user_avatar_uuid
+
+        const html = `
+        <div class="msg_author_avatar">
+            ${user_has_avatar ?
+            `<img src="${url_to_avatar_img}">` :
+            `<div class="image_thumb">${user_name[0]}</div>`
+            }
+        </div>`
+
         return html
     }
 
@@ -167,50 +254,83 @@ var templates = (function(){
             return `</div>`
         },
 
-        pending_message_html: function(message_text, prev_msg_id, index, with_pending_icon=false) {
-            let currentdate = new Date();
-            const hours_str = (currentdate.getHours() < 10 ? "0" : "") + currentdate.getHours()
-            const minutes_str = (currentdate.getMinutes() < 10 ? "0" : "") + currentdate.getMinutes()
-            const send_time = `${hours_str}:${minutes_str}`;
+        pending_message_html: function(message_data, index, with_pending_icon=false) {
+            const prev_msg_id = message_data['prev_msg_id']
+            const message_text = message_data['text']
+
             const html = `
-            <div class="user_message" prev_msg_id="${prev_msg_id}" index="${index}">${message_text}<span class="message_info">
-                <span class="message_meta">
-                    <span class="message_send_time">
-                    ${send_time}</span>
-                    <span class="message_read">
-                        ${with_pending_icon ?
-                        pending_icon_html() :
-                        recieved_icon_html() 
-                        }
-                    </span>
-                </span>
-            </span></div>`
+            <div class="user_message" prev_msg_id="${prev_msg_id}" index="${index}">${message_text}${
+                pending_message_info(message_data, with_pending_icon)
+                }
+            </div>`
+            return html
+        },
+
+        pending_message_with_loading_file_html: function(message_data, index) {
+            const prev_msg_id = message_data['prev_msg_id']
+            const message_text = message_data['text']
+            const file_data = message_data['attachment_data']
+
+            const html = `
+            <div class="user_message message_with_file" prev_msg_id="${prev_msg_id}" index="${index}">
+                ${file_content_html(file_data)}
+                <div class="message_text_container">${message_text}${
+                    pending_message_info(message_data)
+                    }
+                </div>
+            </div>`
+
+            return html
+        },
+
+        pending_message_with_img_html: function(message_data, index) {
+            const prev_msg_id = message_data['prev_msg_id']
+            const message_text = message_data['text']
+            const img_data = message_data['attachment_data']
+
+            const html = `
+            <div class="user_message message_with_img" prev_msg_id="${prev_msg_id}" index="${index}">
+                ${image_content_html(img_data)}
+                <div class="message_text_container">${message_text}${
+                    pending_message_info(message_data)
+                    }
+                </div>
+            </div>`
             return html
         },
 
         own_message: function(message_data, user_id) {
             const id = message_data['id']
             const msg_text = message_data['text']
-            const readed = Object.keys(message_data['read_records']).length !== 0;
-            const reactions = message_data['reactions']
-            const has_reactions = Object.keys(reactions).length !== 0;
+            const has_reactions = Object.keys(message_data['reactions']).length !== 0;
+            const has_file = message_data['is_file_attached']
+            const has_img = message_data['is_img_attached']
         
             const container_classes = 'user_message' + ' '
-                                      + (has_reactions ? 'message_with_reactions' : '')
+                                      + (has_reactions ? 'message_with_reactions ' : '')
+                                      + (has_file ? 'message_with_file ' : '')
+                                      + (has_img ? 'message_with_img ' : '')
+
+            const message_info = own_message_info_html(message_data, user_id)
         
-            const html = `
-            <div class="${container_classes}" msg_id="${id}">${msg_text}<span class="message_info">
-                ${reactions_container_html(reactions, user_id)}
-                <span class="message_meta">
-                    ${message_updated_status_and_send_time_html(message_data)}
-                    <span class="message_read">
-                        ${readed ? 
-                        readed_icon_html() :
-                        recieved_icon_html()
-                        }
-                    </span>
-                </span>
-            </span></div>`
+            let html = `<div class="${container_classes}" msg_id="${id}">`
+            if (!has_img && !has_file) {
+                html += `${msg_text}${message_info}`
+            }
+            else if (has_file) {
+                const file_data = message_data['attachment_data']
+                html += `${file_content_html(file_data)}
+                <div class="message_text_container">${msg_text}${message_info}
+                </div>`
+            }
+            else {
+                const img_data = message_data['attachment_data']
+                html += `${image_content_html(img_data)}
+                <div class="message_text_container">${msg_text}${message_info}
+                </div>`
+            }
+            html += '</div>'
+
             return html
         },
 
@@ -219,14 +339,34 @@ var templates = (function(){
             const msg_text = message_data['text']
             const has_reactions = Object.keys(message_data['reactions']).length !== 0;
             const readed = message_data['readed_by_user']
+            const has_file = message_data['is_file_attached']
+            const has_img = message_data['is_img_attached']
         
             const container_classes = 'collocutor_message' + ' '
-                                      + (readed ? '' : 'unread') + ' '
-                                      + (has_reactions ? 'message_with_reactions' : '')
-        
-            const html = `
-            <div class="${container_classes}" msg_id="${id}">${msg_text}${collocutor_message_info_html(message_data, user_id)}
-            </div>`
+                                      + (readed ? '' : 'unread ')
+                                      + (has_reactions ? 'message_with_reactions ' : '')
+                                      + (has_file ? 'message_with_file ' : '')
+                                      + (has_img ? 'message_with_img ' : '')
+
+            const message_info = collocutor_message_info_html(message_data, user_id)
+
+            let html = `<div class="${container_classes}" msg_id="${id}">`
+            if (!has_img && !has_file) {
+                html += `${msg_text}${message_info}`
+            }
+            else if (has_file) {
+                const file_data = message_data['attachment_data']
+                html += `${file_content_html(file_data)}
+                <div class="message_text_container">${msg_text}${message_info}
+                </div>`
+            }
+            else {
+                const img_data = message_data['attachment_data']
+                html += `${image_content_html(img_data)}
+                <div class="message_text_container">${msg_text}${message_info}
+                </div>`
+            }
+            html += '</div>'
         
             return html
         },
@@ -235,34 +375,30 @@ var templates = (function(){
             const user_name = (collocutor_data) 
                                ? collocutor_data['first_name'] 
                                : 'deleted user'
-            const user_avatar_uuid = (collocutor_data) 
-                                     ? collocutor_data['avatar_img_uuid']
-                                     : ''
-            const user_has_avatar = (user_avatar_uuid && user_avatar_uuid != '')
-            const url_to_avatar_img = window.location.origin + "/files/" + user_avatar_uuid
         
             const id = message_data['id']
             const msg_text = message_data['text']
             const has_reactions = Object.keys(message_data['reactions']).length !== 0;
             const readed = message_data['readed_by_user']
+            const has_file = message_data['is_file_attached']
+            const has_img = message_data['is_img_attached']
         
-            const container_classes = 'collocutor_message' + ' '
-                                      + 'message_with_author' + ' '
-                                      + (readed ? '' : 'unread') + ' ' 
-                                      + (has_reactions ? 'message_with_reactions' : '')
+            const container_classes = 'collocutor_message '
+                                      + 'message_with_author '
+                                      + (readed ? '' : 'unread ')
+                                      + (has_reactions ? 'message_with_reactions ' : '')
+                                      + (has_file ? 'message_with_file ' : '')
+                                      + (has_img ? 'message_with_img ' : '')
         
             const html = `
             <div class="message_with_author_wraper">
-                <div class="msg_author_avatar">
-                    ${user_has_avatar ?
-                    `<img src="${url_to_avatar_img}">` :
-                    `<div class="image_thumb">${user_name[0]}</div>`
-                    }
-                </div>
+                ${message_author_avatar_html(collocutor_data)}
                 <div class="${container_classes}" msg_id="${id}">
                     <div class="message_author">
                         ${user_name}
                     </div>
+                    ${has_file ? file_content_html(message_data['attachment_data']) : ''}
+                    ${has_img ? image_content_html(message_data['attachment_data']) : ''}
                     <div class="message_text_container">${msg_text}${collocutor_message_info_html(message_data, user_id)}
                     </div>
                 </div>
@@ -386,6 +522,16 @@ function createEventListenersFunctions(message_callbacks, message_menu_callbacks
         }
     }
 
+    function trigger_file_download(file_uuid) {
+        const url = window.location.origin + "/files/" + file_uuid
+        const a = document.createElement('a')
+        a.href = url
+        a.download = url.split('/').pop()
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+    }
+
     // ============================ Public methods =====================================
 
     function react_button_event_listeners(event) {
@@ -440,11 +586,17 @@ function createEventListenersFunctions(message_callbacks, message_menu_callbacks
         }
     }
 
+    function download_file_event_listener(event) {
+        const file_uuid = event.currentTarget.getAttribute('file_uuid')
+        trigger_file_download(file_uuid)
+    }
+
     return {
         react_button_event_listeners,
         own_message_event_listener,
         collocutor_message_event_listener,
         pending_message_event_listener,
+        download_file_event_listener,
     }
 }
 
@@ -493,8 +645,9 @@ var changeHtml = (function(){
     }
 
     function set_msgs_event_listeners() {
-        var own_messages = document.querySelectorAll(".user_message")
+        var own_messages = document.querySelectorAll(".user_message[msg_id]")
         var collocutor_messages = document.querySelectorAll(".collocutor_message")
+        var pending_messages = document.querySelectorAll(".user_message[prev_msg_id][index]")
 
         for (let i = 0; i < own_messages.length; i++) {
             set_own_message_event_listeners(own_messages[i])
@@ -503,6 +656,19 @@ var changeHtml = (function(){
         for (let i = 0; i < collocutor_messages.length; i++) {
             set_collocutor_message_event_listeners(collocutor_messages[i])
         }
+
+        for (let i = 0; i< pending_messages.length; i++) {
+            set_pending_message_event_listeners(pending_messages[i])
+        }
+
+        [...own_messages, ...collocutor_messages, ...pending_messages].forEach((message) => {
+            if (message.querySelector('.file_icon')) {
+                message.querySelector('.file_icon').addEventListener(
+                    'click',
+                    eventListenersFunctions.download_file_event_listener
+                )
+            }
+        })
     }
 
     function get_message_reaction_element(msg_id, emoji_unicode) {
@@ -634,9 +800,7 @@ var changeHtml = (function(){
                 let own_msg = templates.own_message(msg,  user_id)
                 msgs_flow_html += own_msg
             }
-            if (date_str) {
-                msgs_flow_html += templates.end_message_date_group()
-            }
+            
 
             const pending_messages = room_data['pending']
         
@@ -644,16 +808,44 @@ var changeHtml = (function(){
             if (pending_messages) {
                 let index = 0
                 for (let msg of pending_messages) {
-                    const with_pending_icon = true
-                    const pending_msg = templates.pending_message_html(
-                        msg['text'],
-                        msg['prev_msg_id'],
-                        index,
-                        with_pending_icon
-                    )
-                    msgs_flow_html += pending_msg
+                    // get date from msg
+                    let msg_date_str = get_localized_date(msg['created_at'])
+                    // if date changed insert data label in html
+                    if (msg_date_str != date_str) {
+                        if (date_str) {
+                            msgs_flow_html += templates.end_message_date_group()
+                        }
+                        msgs_flow_html += templates.start_message_date_group(msg_date_str)
+                    }
+                    date_str = msg_date_str
+                    let pending_msg_html = null
+
+                    if ('is_file_attached' in msg) {
+                        pending_msg_html = templates.pending_message_with_loading_file_html(
+                            msg,
+                            index,
+                        )
+                    }
+                    else if ('is_img_attached' in msg) {
+                        pending_msg_html = templates.pending_message_with_img_html(
+                            msg,
+                            index
+                        )
+                    }
+                    else {
+                        pending_msg_html = templates.pending_message_html(
+                            msg,
+                            index,
+                            with_pending_icon = true
+                        )
+                    }
+                    msgs_flow_html += pending_msg_html
                     index += 1
                 }
+            }
+
+            if (date_str) {
+                msgs_flow_html += templates.end_message_date_group()
             }
     
             let sel_messages_flow = document.querySelector('.messages_flow')
@@ -682,11 +874,13 @@ var changeHtml = (function(){
             }
         },
 
-        add_pending_message_html: function(message_text, prev_msg_id, index) {
-            const message_html = templates.pending_message_html(message_text, prev_msg_id, index)
-            const current_datetime = get_current_datetime()
+        add_pending_message_html: function(message_data, index) {
+            const prev_msg_id = message_data['prev_msg_id']
+            const message_html = templates.pending_message_html(
+                message_data, index
+            )
     
-            add_message_html_to_messages_flow(message_html, current_datetime)
+            add_message_html_to_messages_flow(message_html, message_data['created_at'])
     
             let pending_message_element = document.querySelector(
                 `.messages_flow [prev_msg_id="${prev_msg_id}"][index="${index}"]`
@@ -700,6 +894,42 @@ var changeHtml = (function(){
                     has_read_element.innerHTML = pending_icon_html()
                 }
             }, 2000)
+        },
+
+        add_pending_message_with_file_html: function(message_data, index) {
+            const message_html = templates.pending_message_with_loading_file_html(
+                message_data, 
+                index,
+            )
+    
+            add_message_html_to_messages_flow(message_html, message_data['created_at'])
+
+            if (message_data['text']) {
+                const prev_msg_id = message_data['prev_msg_id']
+                let pending_message_element = document.querySelector(
+                    `.messages_flow [prev_msg_id="${prev_msg_id}"][index="${index}"]`
+                )
+        
+                set_pending_message_event_listeners(pending_message_element)
+            }
+        },
+
+        add_pending_message_with_img_html: function(message_data, index) {
+            const message_html = templates.pending_message_with_img_html(
+                message_data, 
+                index,
+            )
+    
+            add_message_html_to_messages_flow(message_html, message_data['created_at'])
+
+            if (message_data['text']) {
+                const prev_msg_id = message_data['prev_msg_id']
+                let pending_message_element = document.querySelector(
+                    `.messages_flow [prev_msg_id="${prev_msg_id}"][index="${index}"]`
+                )
+        
+                set_pending_message_event_listeners(pending_message_element)
+            }
         },
 
         change_pending_message_to_regular: function(prev_msg_id,
@@ -840,7 +1070,16 @@ var changeHtml = (function(){
     }
 })()
 
-
+function get_size_of_file(bytes) {
+    const kilobytes = bytes / 1024
+    if (kilobytes < 1024) {
+        return `${kilobytes.toFixed(2)} KB`
+    }
+    else {
+        const megabytes = kilobytes / 1024
+        return `${megabytes.toFixed(2)} MB`
+    }
+}
 
 // ===========================================================================================
 // ===========================================================================================
@@ -941,26 +1180,108 @@ export class MessagesContainer {
         }
     }
 
-    add_pending_message(room_uuid, message_text) {
+    #add_to_pending_messages_array(room_uuid, message_text, attachment_data=null, img_attached = false) {
         const room_messages_array = this.room_messages[room_uuid]['messages']
         const prev_msg_id = ( room_messages_array.length > 0 ) ? 
                             room_messages_array[room_messages_array.length - 1]['id'] : 0
         let index = 0
 
-        if (this.room_messages[room_uuid].hasOwnProperty('pending')) {
-            index = this.room_messages[room_uuid]['pending'].push({
-                'text': message_text,
-                'prev_msg_id':prev_msg_id
-            }) - 1
+        const message_data = {
+            'text': message_text,
+            'prev_msg_id': prev_msg_id,
+            'created_at': get_current_datetime(),
         }
-        else {
-            this.room_messages[room_uuid]['pending'] = [{
-                'text': message_text,
-                'prev_msg_id':prev_msg_id
-            }]
+        if (attachment_data) {
+            message_data['attachment_data'] = attachment_data
+            if (img_attached) {
+                message_data['is_img_attached'] = true
+            }
+            else {
+                message_data['is_file_attached'] = true
+            }
         }
 
-        changeHtml.add_pending_message_html(message_text, prev_msg_id, index)
+        if (this.room_messages[room_uuid].hasOwnProperty('pending')) {
+            index = this.room_messages[room_uuid]['pending'].push(message_data) - 1
+        }
+        else {
+            this.room_messages[room_uuid]['pending'] = [message_data]
+        }
+
+        return [message_data, index]
+    }
+
+    add_pending_message(room_uuid, message_text) {
+        const [message_data, index] = this.#add_to_pending_messages_array(room_uuid, message_text)
+
+        changeHtml.add_pending_message_html(message_data, index)
+    }
+
+    add_pending_message_with_file(room_uuid, message_text, file_input) {
+        const file_name = file_input.files[0].name
+        const file_size = file_input.files[0].size
+
+        let file_data = {'name': file_name, 'size': file_size, 'loaded': false}
+        const [message_data, index] = this.#add_to_pending_messages_array(
+            room_uuid, 
+            message_text,
+            file_data,
+        )
+        changeHtml.add_pending_message_with_file_html(
+            message_data, index
+        )
+        return [message_data['prev_msg_id'], index]
+    }
+
+    add_pending_message_with_img(room_uuid, message_text, img_input) {
+        const img_src = URL.createObjectURL(img_input.files[0])
+        let img_data = {'src': img_src, 'loaded': false}
+
+        const [message_data, index] = this.#add_to_pending_messages_array(
+            room_uuid, 
+            message_text,
+            img_data,
+            true
+        )
+        changeHtml.add_pending_message_with_img_html(
+            message_data, index
+        )
+        return [message_data['prev_msg_id'], index]
+    }
+
+    change_load_icon_to_file_icon(room_uuid, prev_msg_id, index, file_uuid) {
+        this.room_messages[room_uuid]['pending'][index]['attachment_data']['loaded'] = true
+        this.room_messages[room_uuid]['pending'][index]['attachment_data']['file_uuid'] = file_uuid
+
+        const msg_element = document.querySelector(
+            `[prev_msg_id="${prev_msg_id}"][index="${index}"]`
+        )
+        if (msg_element) {
+            msg_element.querySelector('.file_load_icon').style.display = 'none'
+
+            const file_icon_element = msg_element.querySelector('.file_icon')
+            file_icon_element.style.display = 'block'
+            file_icon_element.setAttribute('file_uuid', file_uuid)
+            file_icon_element.addEventListener(
+                "click",
+                eventListenersFunctions.download_file_event_listener
+            )
+        }
+    }
+
+    change_load_src_to_file_src(room_uuid, prev_msg_id, index, img_uuid) {
+        this.room_messages[room_uuid]['pending'][index]['attachment_data']['loaded'] = true
+        this.room_messages[room_uuid]['pending'][index]['attachment_data']['img_uuid'] = img_uuid
+
+        const msg_element = document.querySelector(
+            `[prev_msg_id="${prev_msg_id}"][index="${index}"]`
+        )
+        if (msg_element) {
+            const img_element = msg_element.querySelector('.img_content img')
+            const new_src_to_img = window.location.origin + "/files/" + img_uuid
+            img_element.src = new_src_to_img
+        }
+        
     }
 
     mark_pending_message_as_recieved(current_room_uuid, message) {

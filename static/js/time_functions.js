@@ -41,6 +41,15 @@ export function get_hours_minutes(date_str) {
     return send_time
 }
 
+export function get_current_hours_minutes() {
+    let currentdate = new Date();
+    const hours_str = (currentdate.getHours() < 10 ? "0" : "") + currentdate.getHours()
+    const minutes_str = (currentdate.getMinutes() < 10 ? "0" : "") + currentdate.getMinutes()
+    const send_time = `${hours_str}:${minutes_str}`;
+
+    return send_time
+}
+
 export function get_current_datetime() {
     let currentdate = new Date(); 
     let datetime = currentdate.getFullYear() + "-"

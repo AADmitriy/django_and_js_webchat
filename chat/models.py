@@ -21,6 +21,8 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     text = models.CharField(max_length=512)
     updated = models.BooleanField(default=False)
+    attached_img = models.ForeignKey(File, related_name='messages_img', blank=True, null=True, on_delete=models.SET_NULL)
+    attached_file = models.ForeignKey(File, related_name='messages_file', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f'{self.author.username} : {self.text}'

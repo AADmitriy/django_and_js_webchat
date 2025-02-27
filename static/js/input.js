@@ -25,6 +25,96 @@ var templates = (function(){
     }
 })()
 
+var eventListenersFunctions = (function() {
+    return {
+        img_input_button_clicked: function(event) {
+            event.preventDefault()
+            document.querySelector('.main_input #attached_img').click()
+        },
+
+        file_input_button_clicked: function(event) {
+            event.preventDefault()
+            document.querySelector('.main_input #attached_file').click()
+        },
+
+        img_input_changed: function(event) {
+            const file = event.target.files[0]
+            if (!file) {
+                return
+            }
+            
+            const img_preview_element = document.querySelector('.popups .attach_img_preview')
+            img_preview_element.classList.remove("hidden")
+
+            const img_preview_container = img_preview_element.querySelector('img')
+            img_preview_container.src = URL.createObjectURL(file);
+            
+        },
+
+        file_input_changed: function(event) {
+            const file = event.target.files[0]
+            if (!file) {
+                return
+            }
+
+            const file_preview_element = document.querySelector('.popups .attach_file_preview')
+            file_preview_element.classList.remove("hidden")
+
+            const file_preview_container = file_preview_element.querySelector('.file_info')
+            file_preview_container.querySelector('.file_name').textContent = file.name
+            file_preview_container.querySelector('.file_size').textContent = get_size_of_file(file.size)
+        },
+
+        close_img_preview_popup: function(event) {
+            document.querySelector('.popups .attach_img_preview').classList.add("hidden")
+            document.querySelector('.main_input #attached_img').value = ''
+            document.querySelector('.popups .attach_img_preview input#img_caption').value = ''
+        },
+
+        close_file_preview_popup: function(event) {
+            document.querySelector('.popups .attach_file_preview').classList.add("hidden")
+            document.querySelector('.main_input #attached_file').value = ''
+            document.querySelector('.popups .attach_file_preview input#file_caption').value = ''
+        },
+
+        send_img_btn_clicked: async function(sumbit_message_with_img_callback) {
+            document.querySelector('.popups .attach_img_preview').classList.add("hidden")
+
+            const img_input = document.querySelector('.main_input #attached_img')
+            const caption = document.querySelector('.popups .attach_img_preview input#img_caption')
+
+            await sumbit_message_with_img_callback(caption.value, img_input)
+
+            img_input.value = ''
+            caption.value = ''
+        },
+
+        send_file_btn_clicked: async function(submit_message_with_file_callback) {
+            document.querySelector('.popups .attach_file_preview').classList.add("hidden")
+
+            const file_input = document.querySelector('.main_input #attached_file')
+            const caption = document.querySelector('.popups .attach_file_preview input#file_caption')
+
+            await submit_message_with_file_callback(caption.value, file_input)
+
+            file_input.value = ''
+            caption.value = ''
+        },
+
+    }
+})()
+
+function get_size_of_file(bytes) {
+    const kilobytes = bytes / 1024
+    if (kilobytes < 1024) {
+        return `${kilobytes.toFixed(2)} KB`
+    }
+    else {
+        const megabytes = kilobytes / 1024
+        return `${megabytes.toFixed(2)} MB`
+    }
+}
+
 
 // ===========================================================================================
 // ===========================================================================================
@@ -37,8 +127,51 @@ export class Input {
         this.input_container = document.querySelector('.main_input_info')
         this.rooms_inputs = {}
         this.callbacks = callbacks
+        this.#set_default_event_listeners()
         this.#set_enter_event_listener()
         this.#set_submit_button_event_listener()
+    }
+
+    #set_default_event_listeners() {
+        document.querySelector('.main_input .img_input_btn').addEventListener(
+            "click", 
+            eventListenersFunctions.img_input_button_clicked
+        )
+        document.querySelector('.main_input #attached_img').addEventListener(
+            "change", 
+            eventListenersFunctions.img_input_changed
+        )
+        document.querySelector('.popups .attach_img_preview button.close_popup').addEventListener(
+            'click', 
+            eventListenersFunctions.close_img_preview_popup
+        )
+        const _self = this
+        document.querySelector('.popups .attach_img_preview button.submit_attached_file').addEventListener(
+            'click', 
+            () => eventListenersFunctions.send_img_btn_clicked(
+                _self.callbacks.sumbit_message_with_img
+            )
+        )
+
+
+        document.querySelector('.main_input .file_input_btn').addEventListener(
+            "click", 
+            eventListenersFunctions.file_input_button_clicked
+        )
+        document.querySelector('.main_input #attached_file').addEventListener(
+            "change", 
+            eventListenersFunctions.file_input_changed
+        )
+        document.querySelector('.popups .attach_file_preview button.close_popup').addEventListener(
+            "click", 
+            eventListenersFunctions.close_file_preview_popup
+        )
+        document.querySelector('.popups .attach_file_preview button.submit_attached_file').addEventListener(
+            'click', 
+            () => eventListenersFunctions.send_file_btn_clicked(
+                _self.callbacks.submit_message_with_file
+            )
+        )
     }
 
     #set_enter_event_listener() {

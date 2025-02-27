@@ -96,10 +96,12 @@ class Connection {
         console.log('Disconnected from WebSocket server');
     }
     
-    send_message(room_uuid, message_text) {
+    send_message(room_uuid, message_text, attached_img_uuid=null, attached_file_uuid=null) {
         var request_data = {
-            'room_uuid': `${room_uuid}`,
-            'message': `${message_text}`,
+            'room_uuid': room_uuid,
+            'message': message_text,
+            'attached_img_uuid': attached_img_uuid,
+            'attached_file_uuid': attached_file_uuid,
             'request_type': MESSAGE,
         }
 
@@ -434,6 +436,27 @@ function handle_create_private_room(server_response) {
 // =================================================================================
 // Input
 var input_callbacks = (function(){
+    async function upload_file_to_server(file) {
+        const formData = new FormData();
+        // formData.append('attached_file', document.querySelector('.main_input #attached_file').files[0])
+        formData.append('attached_file', file)
+        formData.append('csrfmiddlewaretoken', csrf_token)
+        console.log(formData)
+        try {
+            const response = await fetch(`${window.location.origin}/files/upload`, {
+                method: "POST",
+                body: formData,
+            });
+            var responseData = await response.json();
+        } catch (e) {
+            console.error(e);
+        }
+        document.querySelector('.main_input #attached_file').value = ''
+        console.log(responseData)
+        return responseData['file_uuid']
+    }
+
+    /*============================ Public methods ========================== */
     function submit_input(event) {
         if (event.key == "Enter") {
             event.preventDefault()
@@ -484,6 +507,54 @@ var input_callbacks = (function(){
         messagesContainer.scroll_to_bottom()
     }
 
+    async function submit_message_with_file(message_text, file_input) {
+        const [prev_msg_id, index] = messagesContainer.add_pending_message_with_file(
+            current_room_ref.current_room,
+            message_text,
+            file_input
+        )
+        messagesContainer.scroll_to_bottom()
+
+        const file_uuid = await upload_file_to_server(file_input.files[0])
+
+        messagesContainer.change_load_icon_to_file_icon(
+            current_room_ref.current_room, 
+            prev_msg_id, 
+            index,
+            file_uuid
+        )
+
+        connection.send_message(
+            current_room_ref.current_room, 
+            message_text, 
+            null, file_uuid
+        )
+    }
+
+    async function sumbit_message_with_img(message_text, img_input) {
+        const [prev_msg_id, index] = messagesContainer.add_pending_message_with_img(
+            current_room_ref.current_room,
+            message_text,
+            img_input
+        )
+        setTimeout(messagesContainer.scroll_to_bottom, 100)
+
+        const img_uuid = await upload_file_to_server(img_input.files[0])
+
+        messagesContainer.change_load_src_to_file_src(
+            current_room_ref.current_room, 
+            prev_msg_id, 
+            index,
+            img_uuid
+        )
+
+        connection.send_message(
+            current_room_ref.current_room, 
+            message_text,
+            img_uuid, null
+        )
+    }
+
     return {
         submit_input,
         submit_message_on_button_click,
@@ -492,6 +563,8 @@ var input_callbacks = (function(){
         unshrink_messages_flow,
         update_message,
         send_message,
+        submit_message_with_file,
+        sumbit_message_with_img,
     }
 })()
 
@@ -550,7 +623,9 @@ var message_menu_callbacks = (function(){
             if (!msg_container) {
                 msg_container = element.closest('.collocutor_message')
             }
-            if (msg_container.classList.contains('message_with_author')) {
+            if (msg_container.classList.contains('message_with_author')
+                || msg_container.classList.contains('message_with_file')
+                || msg_container.classList.contains('message_with_img')) {
                 const text_content_obj = msg_container.querySelector(
                     '.message_text_container'
                 )

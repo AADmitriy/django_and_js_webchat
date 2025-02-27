@@ -9,6 +9,56 @@
     <title>Telegram clone</title>
 </head>
 <body>
+    <div class="popups">
+        <div class="attach_img_preview hidden">
+            <div class="popup_backdrop"></div>
+            <div class="popup_container">
+                <div class="popup_topnav">
+                    <button class="close_popup">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                        </svg>
+                    </button>
+                    <h3>Send Photo</h3>
+                </div>
+                <!-- <img src="{% get_media_prefix %}DA_icon.png"> -->
+                <img src="{% get_media_prefix %}files\iceland-s-weather-climate-and-temperature-year-round-14.jpg">
+                <!-- <img src="{% get_media_prefix %}files\icons8-bug-48.png"> -->
+                <div class="input_sumbit_container">
+                    <input type="text" id="img_caption" placeholder="Add a caption...">
+                    <button class="submit_attached_file">Send</button>
+                </div>
+            </div>
+        </div>
+        <div class="attach_file_preview hidden">
+            <div class="popup_backdrop"></div>
+            <div class="popup_container">
+                <div class="popup_topnav">
+                    <button class="close_popup">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                        </svg>
+                    </button>
+                    <h3>Send File</h3>
+                </div>
+                <div class="file_preview">
+                    <div class="file_icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5z"/>
+                        </svg>
+                    </div>
+                    <div class="file_info">
+                        <div class="file_name">some_file.pdf</div>
+                        <div class="file_size">123.5 KB</div>
+                    </div>
+                </div>
+                <div class="input_sumbit_container">
+                    <input type="text" id="file_caption" placeholder="Add a caption...">
+                    <button class="submit_attached_file">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
     {% include "partials_for_base_page/delete_msg_popup.html" %}
     <div class="chat_menu_wrapper hidden" room_uuid="0">
         <div class="chat_menu_backdrop"></div>
@@ -104,7 +154,13 @@
                                 <div class="add_file">
                                     <!-- <span class="material-symbols-outlined">attach_file</span> -->
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M720-330q0 104-73 177T470-80q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v350q0 46-32 78t-78 32q-46 0-78-32t-32-78v-370h80v370q0 13 8.5 21.5T470-320q13 0 21.5-8.5T500-350v-350q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q70 0 119-49.5T640-330v-390h80v390Z"/></svg>
+                                    <div class="attach_file_menu">
+                                        <button class="img_input_btn">Photo</button>
+                                        <button class="file_input_btn">File</button>
+                                    </div>
                                 </div>
+                                <input type="file" accept="image/png, image/jpeg" id="attached_img" style="display:none;">
+                                <input type="file" id="attached_file" style="display:none;">
                             </div>
                         </div>
                         <div class="send_msg_record_voice">
