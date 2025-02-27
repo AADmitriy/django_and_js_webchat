@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+db.sqlite3
+
+
+media/files/*.jpg
+media/files/*.JPG
+media/files/*.png
+media/uploads/*.jpg
+media/uploads/*.JPG
+media/uploads/*.png
+media/wallpaper_repeating.png
