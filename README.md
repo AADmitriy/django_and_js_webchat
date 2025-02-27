@@ -12,6 +12,7 @@ Chat site driven by websockets using Django channels and plain JavaScript
 * react to messages
 * edit messages
 * delete messages
+* attach files and images to messages
 * create groups
 * manage groups (add, delete users)
 * search for users and groups
@@ -35,6 +36,9 @@ Chat site driven by websockets using Django channels and plain JavaScript
 
 ### Delete message popup
 ![delete_message_popup_img](https://github.com/user-attachments/assets/0cbaacb1-945a-475f-be74-3cbfa1535fbc)
+
+### Messages with files and images attached
+![image](https://github.com/user-attachments/assets/9e28801a-c101-473b-b340-63dac4a104aa)
 
 ### Group creation menu
 ![group_creation_img](https://github.com/user-attachments/assets/fed304e7-7f69-4740-b1e5-181e91a33f9e)
